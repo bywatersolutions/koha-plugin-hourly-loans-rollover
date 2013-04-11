@@ -1,0 +1,80 @@
+[% USE KohaDates %]
+[% INCLUDE 'doc-head-open.inc' %]
+ <title>Koha: Kitchen Sink Plugin: Example Tool</title>
+[% INCLUDE 'doc-head-close.inc' %]
+</head>
+<body>
+[% INCLUDE 'header.inc' %]
+[% INCLUDE 'cat-search.inc' %]
+
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; Hourly Loans Rollover</div>
+
+<div id="doc3">
+    [% IF updated %]
+        <h3>Checkouts updated</h3>
+    [% ELSE %]
+        <h3>Checkouts to be updated</h3>
+    [% END %]
+
+    <table>
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Patron</th>
+                <th>Title</th>
+                <th>Barcode</th>
+                <th>Old due date</th>
+                <th>Closing time</th>
+                <th>Opening date</th>
+                <th>Opening time</th>
+                <th>New due date</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            [% FOREACH c IN checkouts %]
+                <tr>
+                    <td>
+                        [% c.issue_id %]
+                    </td>
+                    <td>
+                        [% c.firstname %] [% c.surname %] ([% c.cardnumber %])
+                    </td>
+                    <td>
+                        [% c.title %]
+                    </td>
+                    <td>
+                        [% c.barcode %]
+                    </td>
+                    <td>
+                        [% c.date_due | $KohaDates with_hours => 1 %]
+                    </td>
+                    <td>
+                        [% c.closing_time %]
+                    </td>
+                    <td>
+                        [% c.opening_date | $KohaDates %]
+                    </td>
+                    <td>
+                        [% c.opening_time %]
+                    </td>
+                    <td>
+                        [% c.new_date_due | $KohaDates with_hours => 1 %]
+                    </td>
+                </tr>
+            [% END %]
+        </tbody>
+    </table>
+
+    <p/>
+
+    [% IF checkouts && !updated %]
+        <form method="post">
+            <input type="hidden" name="class" value="[% CLASS %]"/>
+            <input type="hidden" name="method" value="[% METHOD %]"/>
+            <input type="hidden" name="update" value="1"/>
+            <input name="submitted" type="submit" value="Change due dates and times" onclick="return confirm('Are you sure?')" />
+        </form>
+    [% END %]
+
+[% INCLUDE 'intranet-bottom.inc' %]
