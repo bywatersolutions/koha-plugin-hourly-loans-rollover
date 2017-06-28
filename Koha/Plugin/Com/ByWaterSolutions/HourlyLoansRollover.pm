@@ -12,6 +12,7 @@ use C4::Context;
 use C4::Auth;
 use Koha::DateUtils;
 use Koha::Libraries;
+use Koha::Calendar;
 
 ## Here we set our plugin version
 our $VERSION = "{VERSION}";
@@ -29,6 +30,7 @@ our $metadata = {
     version         => $VERSION,
 };
 
+our $calendars = {};
 our @days_of_week =
   qw( Monday Tuesday Wednesday Thursday Friday Saturday Sunday );
 
@@ -86,7 +88,7 @@ sub tool {
                 $row->{opening_date} = $opening_date;
                 $row->{opening_time} = $opening_time;
 
-                my $dt = dt_from_string( "$opening_date $opening_time" );
+                my $dt = dt_from_string("$opening_date $opening_time");
                 $dt->add( hours => 1 );
                 $row->{new_date_due} = $dt->ymd('-') . ' ' . $dt->hms(':');
 
@@ -99,10 +101,11 @@ sub tool {
 
     if ( $cgi->param('update') ) {
         my $update_query = "UPDATE issues SET date_due = ? WHERE issue_id = ?";
-        my $update_sth = $dbh->prepare( $update_query );
+        my $update_sth   = $dbh->prepare($update_query);
 
-        foreach my $c ( @checkouts ) {
-            my $res = $update_sth->execute( $c->{new_date_due}, $c->{issue_id} );
+        foreach my $c (@checkouts) {
+            my $res =
+              $update_sth->execute( $c->{new_date_due}, $c->{issue_id} );
             warn "RES $res";
             warn "NEW DATE DUE: " . $c->{new_date_due};
         }
@@ -340,8 +343,23 @@ sub get_time {
     my $branchcode = $args->{branchcode};
     my $datetime   = $args->{datetime};
 
-    my $days = $type eq 'closing' ? 0 : 1;
+    my $days  = $type eq 'closing' ? 0        : 1;
     my $field = $type eq 'closing' ? 'closes' : 'opens';
+
+    # Skip over holidays when finding new due date and time
+    if ( $field eq 'opens' ) {
+        my $dt = dt_from_string($datetime);
+            $dt->add( days => $days );
+
+        $calendars->{$branchcode} ||=
+          Koha::Calendar->new( branchcode => $branchcode );
+        my $calendar = $calendars->{$branchcode};
+
+        while ( $calendar->is_holiday($dt) ) {
+            $dt->add( days => 1 );
+            $days++;
+        }
+    }
 
     my $dbh = C4::Context->dbh;
 
@@ -366,13 +384,15 @@ sub get_time {
       if $result && $result ne '0E0';
 
     # Then weekly hours for the specific libary
-    $result = $hours_of_operation_sth->execute( $datetime, $branchcode, $datetime );
+    $result =
+      $hours_of_operation_sth->execute( $datetime, $branchcode, $datetime );
     $row = $hours_of_operation_sth->fetchrow_hashref;
     return ( $row->{$field}, $row->{calculated_date} )
       if $result && $result ne '0E0';
 
     # Finally, check if there are weekly hours set for all libraries
-    $result = $hours_of_operation_sth->execute( $datetime, 'ALL_LIBS', $datetime );
+    $result =
+      $hours_of_operation_sth->execute( $datetime, 'ALL_LIBS', $datetime );
     $row = $hours_of_operation_sth->fetchrow_hashref;
     return ( $row->{$field}, $row->{calculated_date} )
       if $result && $result ne '0E0';
