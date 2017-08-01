@@ -57,7 +57,13 @@ sub tool {
         LEFT JOIN borrowers USING ( borrowernumber )
         LEFT JOIN items USING ( itemnumber )
         LEFT JOIN biblio USING ( biblionumber )
-        WHERE date_due > NOW()
+        WHERE DATE(issuedate) = CURDATE()
+          AND date_due > NOW()
+          AND (
+            DATE(date_due) = CURDATE()
+            OR
+            DATE(date_due) = CURDATE() + INTERVAL 1 DAY
+          )
     };
     my $sth = $dbh->prepare($query);
     $sth->execute();
@@ -72,22 +78,35 @@ sub tool {
             }
         );
 
+        my ( $opening_time, $opening_date ) = $self->get_time(
+            {
+                type       => 'opening',
+                branchcode => $row->{holdingbranch},
+                datetime   => $row->{date_due},
+            }
+        );
+
+        $row->{opening_date} = $opening_date;
+        $row->{opening_time} = $opening_time;
+        $row->{closing_date} = $closing_date;
+        $row->{closing_time} = $closing_time;
+
+        # If due before opening, push due date/time to 1 hour after opening on that day
+        if ($opening_time) {
+            my ( undef, $time_due ) = split( / /, $row->{date_due} );
+            if ( $time_due lt $opening_time ) {
+                my $dt = dt_from_string("$opening_date $opening_time");
+                $dt->add( hours => 1 );
+                $row->{new_date_due} = $dt->ymd('-') . ' ' . $dt->hms(':');
+
+                push( @checkouts, $row );
+            }
+        }
+
+        # If closing, push due date/time to 1 hour after opening the following open day
         if ($closing_time) {
             my ( undef, $time_due ) = split( / /, $row->{date_due} );
             if ( $time_due gt $closing_time ) {
-                $row->{closing_time} = $closing_time;
-
-                my ( $opening_time, $opening_date ) = $self->get_time(
-                    {
-                        type       => 'opening',
-                        branchcode => $row->{holdingbranch},
-                        datetime   => $row->{date_due},
-                    }
-                );
-
-                $row->{opening_date} = $opening_date;
-                $row->{opening_time} = $opening_time;
-
                 my $dt = dt_from_string("$opening_date $opening_time");
                 $dt->add( hours => 1 );
                 $row->{new_date_due} = $dt->ymd('-') . ' ' . $dt->hms(':');
@@ -349,7 +368,7 @@ sub get_time {
     # Skip over holidays when finding new due date and time
     if ( $field eq 'opens' ) {
         my $dt = dt_from_string($datetime);
-            $dt->add( days => $days );
+        $dt->add( days => $days );
 
         $calendars->{$branchcode} ||=
           Koha::Calendar->new( branchcode => $branchcode );
