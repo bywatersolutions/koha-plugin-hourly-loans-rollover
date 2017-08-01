@@ -100,6 +100,7 @@ sub tool {
                 $row->{new_date_due} = $dt->ymd('-') . ' ' . $dt->hms(':');
 
                 push( @checkouts, $row );
+                next;
             }
         }
 
