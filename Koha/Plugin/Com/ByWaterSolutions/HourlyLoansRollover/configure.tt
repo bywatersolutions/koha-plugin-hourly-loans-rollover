@@ -317,28 +317,38 @@
 
                     <fieldset class="rows">
                         <legend>Time due after opening</legend>
-                        
+
+                        <p/>
+
                         <li>
                             <label for="due_after_opening_hours">Hours: </label>
-                            <select id="due_after_opening_hours">
+                            <select id="due_after_opening_hours" name="due_after_opening_hours">
                                 [% FOREACH m IN [ 0 .. 59 ] %]
-                                    <option value="[% pad_time(m) %]" [% IF m == due_after_opening_hours %]selected="selected"[% END %]>[% m %]</option>
+                                    <option value="[% m %]" [% IF m == due_after_opening_hours %]selected="selected"[% END %]>[% m %]</option>
                                 [% END %]
                             </select>
                         </li>
 
                         <li>
                             <label for="due_after_opening_minutes">Minutes: </label>
-                            <select id="due_after_opening_minutes">
+                            <select id="due_after_opening_minutes" name="due_after_opening_minutes">
                                 [% FOREACH m IN [ 0 .. 59 ] %]
-                                    <option value="[% pad_time(m) %]" [% IF m == due_after_opening_minutes %]selected="selected"[% END %]>[% m %]</option>
+                                    <option value="[% m %]" [% IF m == due_after_opening_minutes %]selected="selected"[% END %]>[% m %]</option>
                                 [% END %]
                             </select>
                         </li>
                     </fieldset>
 
+                    <br/><br/>
+                    <br/><br/>
+                    <br/><br/>
+                    <br/><br/>
+
                     <input type="hidden" name="save" value="1" />
-                    <input type="submit" value="Save configuration" />
+
+                    <p>
+                        <input type="submit" value="Save configuration" />
+                    </p>
                 </form>
             </div>
         </div>
