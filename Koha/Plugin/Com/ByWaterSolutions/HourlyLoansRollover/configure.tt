@@ -322,7 +322,7 @@
                             <label for="due_after_opening_hours">Hours: </label>
                             <select id="due_after_opening_hours">
                                 [% FOREACH m IN [ 0 .. 59 ] %]
-                                    <option value="[% pad_time(m) %]" [% IF pad_time(m) == $key %]selected="selected"[% END %]>[% pad_time(m) %]</option>
+                                    <option value="[% pad_time(m) %]" [% IF m == due_after_opening_hours %]selected="selected"[% END %]>[% m %]</option>
                                 [% END %]
                             </select>
                         </li>
@@ -331,7 +331,7 @@
                             <label for="due_after_opening_minutes">Minutes: </label>
                             <select id="due_after_opening_minutes">
                                 [% FOREACH m IN [ 0 .. 59 ] %]
-                                    <option value="[% pad_time(m) %]" [% IF pad_time(m) == $key %]selected="selected"[% END %]>[% pad_time(m) %]</option>
+                                    <option value="[% pad_time(m) %]" [% IF m == due_after_opening_minutes %]selected="selected"[% END %]>[% m %]</option>
                                 [% END %]
                             </select>
                         </li>
