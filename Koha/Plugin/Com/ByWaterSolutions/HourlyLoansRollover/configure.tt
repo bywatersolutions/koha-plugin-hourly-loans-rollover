@@ -315,8 +315,29 @@
                         [% END %]
                     </div>
 
-                    <input type="hidden" name="save" value="1" />
+                    <fieldset class="rows">
+                        <legend>Time due after opening</legend>
+                        
+                        <li>
+                            <label for="due_after_opening_hours">Hours: </label>
+                            <select id="due_after_opening_hours">
+                                [% FOREACH m IN [ 0 .. 59 ] %]
+                                    <option value="[% pad_time(m) %]" [% IF pad_time(m) == $key %]selected="selected"[% END %]>[% pad_time(m) %]</option>
+                                [% END %]
+                            </select>
+                        </li>
 
+                        <li>
+                            <label for="due_after_opening_minutes">Minutes: </label>
+                            <select id="due_after_opening_minutes">
+                                [% FOREACH m IN [ 0 .. 59 ] %]
+                                    <option value="[% pad_time(m) %]" [% IF pad_time(m) == $key %]selected="selected"[% END %]>[% pad_time(m) %]</option>
+                                [% END %]
+                            </select>
+                        </li>
+                    </fieldset>
+
+                    <input type="hidden" name="save" value="1" />
                     <input type="submit" value="Save configuration" />
                 </form>
             </div>

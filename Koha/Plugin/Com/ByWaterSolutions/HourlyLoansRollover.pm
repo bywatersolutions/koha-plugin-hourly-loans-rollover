@@ -96,7 +96,10 @@ sub tool {
             my ( undef, $time_due ) = split( / /, $row->{date_due} );
             if ( $time_due lt $opening_time ) {
                 my $dt = dt_from_string("$opening_date $opening_time");
-                $dt->add( hours => 1 );
+                $dt->add(
+                    hours   => $self->retrieve_data('due_after_opening_hours')   || 0,
+                    minutes => $self->retrieve_data('due_after_opening_minutes') || 0,
+                );
                 $row->{new_date_due} = $dt->ymd('-') . ' ' . $dt->hms(':');
 
                 push( @checkouts, $row );
@@ -180,7 +183,11 @@ sub configure {
             $exceptions->{$branchcode}->{$on_date}->{closes_min} = $closes_min;
             $exceptions->{$branchcode}->{$on_date}->{id}         = $id;
         }
-        $template->param( exceptions => $exceptions );
+        $template->param(
+            exceptions                => $exceptions,
+            due_after_opening_hours   => $self->retrieve_data('due_after_opening_hours'),
+            due_after_opening_minutes => $self->retrieve_data('due_after_opening_minutes'),
+        );
 
         ## Grab the values we already have for our settings, if any exist
         my $libraries = Koha::Libraries->search();
@@ -263,7 +270,9 @@ sub configure {
 
         $self->store_data(
             {
-                last_configured_by => C4::Context->userenv->{'number'},
+                last_configured_by        => C4::Context->userenv->{'number'},
+                due_after_opening_hours   => $cgi->param('due_after_opening_hours'),
+                due_after_opening_minutes => $cgi->param('due_after_opening_minutes'),
             }
         );
         $self->go_home();
@@ -314,46 +323,7 @@ sub install() {
 sub uninstall() {
     my ( $self, $args ) = @_;
 
-    my $table = $self->get_qualified_table_name('mytable');
-
-    return C4::Context->dbh->do("DROP TABLE $table");
-}
-
-sub tool_step1 {
-    my ( $self, $args ) = @_;
-    my $cgi = $self->{'cgi'};
-
-}
-
-sub tool_step2 {
-    my ( $self, $args ) = @_;
-    my $cgi = $self->{'cgi'};
-
-    my $template = $self->get_template( { file => 'tool.tt' } );
-
-    my $borrowernumber = C4::Context->userenv->{'number'};
-    my $borrower = GetMember( borrowernumber => $borrowernumber );
-    $template->param( 'victim' => $borrower );
-
-    ModMember( borrowernumber => $borrowernumber, firstname => 'Bob' );
-
-    my $dbh = C4::Context->dbh;
-
-    my $table = $self->get_qualified_table_name('mytable');
-
-    my $sth = $dbh->prepare("SELECT DISTINCT(borrowernumber) FROM $table");
-    $sth->execute();
-    my @victims;
-    while ( my $r = $sth->fetchrow_hashref() ) {
-        push( @victims, GetMember( borrowernumber => $r->{'borrowernumber'} ) );
-    }
-    $template->param( 'victims' => \@victims );
-
-    $dbh->do( "INSERT INTO $table ( borrowernumber ) VALUES ( ? )",
-        undef, ($borrowernumber) );
-
-    print $cgi->header();
-    print $template->output();
+    return 1;
 }
 
 sub get_time {
