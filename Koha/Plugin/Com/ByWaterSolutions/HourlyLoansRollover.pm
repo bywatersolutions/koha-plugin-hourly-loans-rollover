@@ -94,6 +94,7 @@ sub tool {
         # If due before opening, push due date/time to 1 hour after opening on that day
         if ($opening_time) {
             my ( undef, $time_due ) = split( / /, $row->{date_due} );
+
             if ( $time_due lt $opening_time ) {
                 my $dt = dt_from_string("$opening_date $opening_time");
                 $dt->add(
@@ -129,8 +130,6 @@ sub tool {
         foreach my $c (@checkouts) {
             my $res =
               $update_sth->execute( $c->{new_date_due}, $c->{issue_id} );
-            warn "RES $res";
-            warn "NEW DATE DUE: " . $c->{new_date_due};
         }
 
         $template->param( updated => 1 );
@@ -333,12 +332,25 @@ sub get_time {
     my $branchcode = $args->{branchcode};
     my $datetime   = $args->{datetime};
 
+    my $dbh = C4::Context->dbh;
+
+    my $dt = dt_from_string($datetime);
+
     my $days  = $type eq 'closing' ? 0        : 1;
     my $field = $type eq 'closing' ? 'closes' : 'opens';
 
     # Skip over holidays when finding new due date and time
     if ( $field eq 'opens' ) {
-        my $dt = dt_from_string($datetime);
+        # We assume that for opening hours, we want the next day, but if the item is due before opening hours on the current due date,
+        # we don't way to start the next day, we want to start with the current due day
+        my $current_due_date_hlr_hours = $dbh->selectrow_hashref("SELECT * FROM com_bws_hlr_exceptions WHERE on_date = ? AND branchcode = ?", undef, $dt->ymd,      $branchcode);    
+        $current_due_date_hlr_hours  //= $dbh->selectrow_hashref("SELECT * FROM com_bws_hlr_exceptions WHERE on_date = ? AND branchcode = ?", undef, $dt->ymd,      'ALL_LIBS');
+        $current_due_date_hlr_hours  //= $dbh->selectrow_hashref("SELECT * FROM com_bws_hlr_hours      WHERE dow = ? AND branchcode = ?"    , undef, $dt->day_name, $branchcode);    
+        $current_due_date_hlr_hours  //= $dbh->selectrow_hashref("SELECT * FROM com_bws_hlr_hours      WHERE dow = ? AND branchcode = ?"    , undef, $dt->day_name, 'ALL_LIBS');
+        if ( $dt->hms lt $current_due_date_hlr_hours->{opens} ) {
+            $days = 0;
+        }
+
         $dt->add( days => $days );
 
         $calendars->{$branchcode} ||=
@@ -350,8 +362,6 @@ sub get_time {
             $days++;
         }
     }
-
-    my $dbh = C4::Context->dbh;
 
     my $exceptions_query =
 "SELECT *, DATE(DATE_ADD(?, INTERVAL $days DAY)) AS calculated_date FROM com_bws_hlr_exceptions WHERE branchcode = ? AND on_date = DATE(DATE_ADD(?, INTERVAL $days DAY))";
