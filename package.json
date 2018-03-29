@@ -1,7 +1,7 @@
 {
   "name": "koha-plugin-hourly-loans-rollover",
-  "version": "1.3.6",
-  "previous_version": "1.3.5",
+  "version": "1.3.7",
+  "previous_version": "1.3.6",
   "description": "Koha Hourly Loans Rollover Plugin",
   "devDependencies": {
     "gulp": "^3.9.1",
