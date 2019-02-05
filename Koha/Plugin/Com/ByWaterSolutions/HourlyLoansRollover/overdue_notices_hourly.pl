@@ -153,7 +153,7 @@ while ( my $row = $sth->fetchrow_hashref ) {
         )
       )
     {
-        EnqueueLetter(
+        C4::Letters::EnqueueLetter(
             {
                 letter                 => $letter,
                 borrowernumber         => '12',
