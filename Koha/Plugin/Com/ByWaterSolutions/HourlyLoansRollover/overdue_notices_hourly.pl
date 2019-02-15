@@ -156,7 +156,7 @@ while ( my $row = $sth->fetchrow_hashref ) {
         C4::Letters::EnqueueLetter(
             {
                 letter                 => $letter,
-                borrowernumber         => '12',
+                borrowernumber         => $row->{borrowernumber},
                 message_transport_type => 'email'
             }
         ) if $confirm;
