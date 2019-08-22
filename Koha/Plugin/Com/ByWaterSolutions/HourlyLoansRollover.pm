@@ -30,6 +30,8 @@ our $metadata = {
     version         => $VERSION,
 };
 
+$ENV{SCRIPT_NAME} = 'Koha/Plugin/Com/ByWaterSolutions/HourlyLoansRollover.pm';
+
 our $calendars = {};
 our @days_of_week =
   qw( Monday Tuesday Wednesday Thursday Friday Saturday Sunday );
