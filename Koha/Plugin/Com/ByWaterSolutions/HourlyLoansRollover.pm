@@ -206,8 +206,7 @@ sub configure {
 
         #FIXME: Make this all atomic
         $dbh->do("DELETE FROM com_bws_hlr_hours");
-        my $query_hours =
-"INSERT INTO com_bws_hlr_hours ( branchcode, dow, opens, closes ) VALUES ( ?, ?, ?, ? )";
+        my $query_hours = "INSERT INTO com_bws_hlr_hours ( branchcode, dow, opens, closes ) VALUES ( ?, ?, ?, ? )";
         my $sth_hours = $dbh->prepare($query_hours);
 
         foreach my $day (@days_of_week) {
@@ -216,18 +215,16 @@ sub configure {
                 my $opens_min   = $vars->{"HoO-$branchcode-$day-opening-min"};
                 my $closes_hour = $vars->{"HoO-$branchcode-$day-closing-hour"};
                 my $closes_min  = $vars->{"HoO-$branchcode-$day-closing-min"};
+                
+                my $opens = ( $opens_hour && $opens_min ) ? "$opens_hour:$opens_min" : undef;
+                my $closes = ( $closes_hour && $closes_min ) ? "$closes_hour:$closes_min" : undef;
 
-                if ( $opens_hour && $opens_min && $closes_hour && $closes_min )
-                {
-                    $sth_hours->execute( $branchcode, $day,
-                        "$opens_hour:$opens_min", "$closes_hour:$closes_min" );
-                }
+                $sth_hours->execute( $branchcode, $day, $opens, $closes );
             }
         }
 
         $dbh->do("DELETE FROM com_bws_hlr_exceptions");
-        my $query_exceptions =
-"INSERT INTO com_bws_hlr_exceptions ( branchcode, on_date, opens, closes ) VALUES ( ?, ?, ?, ? )";
+        my $query_exceptions = "INSERT INTO com_bws_hlr_exceptions ( branchcode, on_date, opens, closes ) VALUES ( ?, ?, ?, ? )";
         my $sth_exceptions = $dbh->prepare($query_exceptions);
 
         my @exception_date        = $cgi->param('exception_date');
@@ -244,11 +241,13 @@ sub configure {
             my $exception_opens_min   = pop(@exception_opens_min);
             my $exception_closes_hour = pop(@exception_closes_hour);
             my $exception_closes_min  = pop(@exception_closes_min);
+            
+            my $exception_opens = ( $exception_opens_hour && $exception_opens_min ) ? "$exception_opens_hour:$exception_opens_min" : undef;
+            my $exception_closes = ( $exception_closes_hour && $exception_closes_min ) ? "$exception_closes_hour:$exception_closes_min" : undef;
 
             if ($exception_date) {
-
-            # Some dates will come in as ISO, some in the preferred date format.
-            # Let's convert them all to ISO for simplicity
+                # Some dates will come in as ISO, some in the preferred date format.
+                # Let's convert them all to ISO for simplicity
                 $exception_date = output_pref(
                     {
                         dt         => dt_from_string($exception_date),
@@ -260,8 +259,8 @@ sub configure {
                 $sth_exceptions->execute(
                     $exception_branchcode,
                     $exception_date,
-                    "$exception_opens_hour:$exception_opens_min",
-                    "$exception_closes_hour:$exception_closes_min"
+                    $exception_opens,
+                    $exception_closes,
                 );
             }
             else {
@@ -280,6 +279,31 @@ sub configure {
     }
 }
 
+## This is the 'upgrade' method. It will be triggered when a newer version of a
+## plugin is installed over an existing older version of a plugin
+sub upgrade {
+    my ( $self, $args ) = @_;
+
+    my $database_version = $self->retrieve_data('__INSTALLED_VERSION__') || 0;
+
+    if ( $self->_version_compare( "1.3.11", $database_version ) ) {
+
+        my $po_table = $self->get_qualified_table_name('purchase_orders');
+
+        my $dbh = C4::Context->dbh;
+        
+        $dbh->do(qq{ALTER TABLE com_bws_hlr_hours CHANGE opens opens TIME NULL});
+        $dbh->do(qq{ALTER TABLE com_bws_hlr_hours CHANGE closes closes TIME NULL});
+        
+        $dbh->do(qq{ALTER TABLE com_bws_hlr_exceptions CHANGE opens opens TIME NULL});
+        $dbh->do(qq{ALTER TABLE com_bws_hlr_exceptions CHANGE closes closes TIME NULL});
+
+        $self->store_data({ '__INSTALLED_VERSION__' => "1.3.11" });
+    }
+
+    return 1;
+}
+
 ## This is the 'install' method. Any database tables or other setup that should
 ## be done when the plugin if first installed should be executed in this method.
 ## The installation method should always return true if the installation succeeded
@@ -293,8 +317,8 @@ sub install() {
                 id INT(11) NOT NULL auto_increment,
                 branchcode VARCHAR(10) NOT NULL default '',
                 dow VARCHAR(10),
-                opens TIME NOT NULL,
-                closes TIME NOT NULL,
+                opens TIME NULL,
+                closes TIME NULL,
                 PRIMARY KEY (id),
                 KEY `branchcode` (`branchcode`)
             ) ENGINE = INNODB;
@@ -307,8 +331,8 @@ sub install() {
                 id INT(11) NOT NULL auto_increment,
                 branchcode VARCHAR(10) NOT NULL default '',
                 on_date DATE NOT NULL,
-                opens TIME NOT NULL,
-                closes TIME NOT NULL,
+                opens TIME NULL,
+                closes TIME NULL,
                 PRIMARY KEY (id),
                 KEY `branchcode` (`branchcode`)
             ) ENGINE = INNODB;
