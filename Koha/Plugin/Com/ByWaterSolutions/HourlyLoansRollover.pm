@@ -72,6 +72,9 @@ sub tool {
 
     my @checkouts;
     while ( my $row = $sth->fetchrow_hashref() ) {
+        my $loanlength = C4::Circulation::GetLoanLength( $row->{categorycode}, $row->{itype}, $row->{branchcode} );
+        next if $loanlength->{lengthunit} eq 'days';
+
         my ( $closing_time, $closing_date ) = $self->get_time(
             {
                 type       => 'closing',
@@ -92,6 +95,15 @@ sub tool {
         $row->{opening_time} = $opening_time;
         $row->{closing_date} = $closing_date;
         $row->{closing_time} = $closing_time;
+
+        # If the next time the library closes is *after* the item is due
+        # don't change the due date. This is needed because some libraries
+        # are open 24 hours a day during the weekdays, closing only on weekends
+        if ($closing_time) {
+            my $closing_dt = "$closing_date $closing_time";
+            my $skip       = $row->{date_due} le $closing_dt;
+            next if $row->{date_due} le $closing_dt;
+        }
 
         # If due before opening, push due date/time to 1 hour after opening on that day
         if ($opening_time) {
