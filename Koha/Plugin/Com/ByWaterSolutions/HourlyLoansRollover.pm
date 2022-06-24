@@ -10,7 +10,7 @@ use base qw(Koha::Plugins::Base);
 ## We will also need to include any Koha libraries we want to access
 use C4::Context;
 use C4::Auth;
-use C4::Installer (TableExists);
+use C4::Installer qw(TableExists);
 
 use Koha::DateUtils;
 use Koha::Libraries;
