@@ -52,6 +52,7 @@ sub new {
 sub tool {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
+    my $silent = $args->{silent} // undef;
 
     my $template = $self->get_template( { file => 'tool.tt' } );
 
@@ -151,8 +152,10 @@ sub tool {
         $template->param( updated => 1 );
     }
 
-    print $cgi->header();
-    print $template->output();
+    unless( $silent ){
+        print $cgi->header();
+        print $template->output();
+    }
 
 }
 
