@@ -325,7 +325,7 @@ sub upgrade {
 sub install() {
     my ( $self, $args ) = @_;
 
-    unless( TableExists( com_bws_hlr_hours ) ){
+    unless( TableExists("com_bws_hlr_hours") ){
         C4::Context->dbh->do(
             qq{
                 CREATE TABLE com_bws_hlr_hours (
@@ -341,7 +341,7 @@ sub install() {
         );
     }
 
-    unless( TableExists( com_bws_hlr_exceptions )  ){
+    unless( TableExists("com_bws_hlr_exceptions")  ){
         C4::Context->dbh->do(
             qq{
                 CREATE TABLE com_bws_hlr_exceptions (
