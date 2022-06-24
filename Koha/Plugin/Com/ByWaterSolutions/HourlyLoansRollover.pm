@@ -10,6 +10,8 @@ use base qw(Koha::Plugins::Base);
 ## We will also need to include any Koha libraries we want to access
 use C4::Context;
 use C4::Auth;
+use C4::Installer (TableExists);
+
 use Koha::DateUtils;
 use Koha::Libraries;
 use Koha::Calendar;
@@ -323,33 +325,37 @@ sub upgrade {
 sub install() {
     my ( $self, $args ) = @_;
 
-    C4::Context->dbh->do(
-        qq{
-            CREATE TABLE com_bws_hlr_hours (
-                id INT(11) NOT NULL auto_increment,
-                branchcode VARCHAR(10) NOT NULL default '',
-                dow VARCHAR(10),
-                opens TIME NULL,
-                closes TIME NULL,
-                PRIMARY KEY (id),
-                KEY `branchcode` (`branchcode`)
-            ) ENGINE = INNODB;
-        }
-    );
+    unless( TableExists( com_bws_hlr_hours ) ){
+        C4::Context->dbh->do(
+            qq{
+                CREATE TABLE com_bws_hlr_hours (
+                    id INT(11) NOT NULL auto_increment,
+                    branchcode VARCHAR(10) NOT NULL default '',
+                    dow VARCHAR(10),
+                    opens TIME NULL,
+                    closes TIME NULL,
+                    PRIMARY KEY (id),
+                    KEY `branchcode` (`branchcode`)
+                ) ENGINE = INNODB;
+            }
+        );
+    }
 
-    C4::Context->dbh->do(
-        qq{
-            CREATE TABLE com_bws_hlr_exceptions (
-                id INT(11) NOT NULL auto_increment,
-                branchcode VARCHAR(10) NOT NULL default '',
-                on_date DATE NOT NULL,
-                opens TIME NULL,
-                closes TIME NULL,
-                PRIMARY KEY (id),
-                KEY `branchcode` (`branchcode`)
-            ) ENGINE = INNODB;
-        }
-    );
+    unless( TableExists( com_bws_hlr_exceptions )  ){
+        C4::Context->dbh->do(
+            qq{
+                CREATE TABLE com_bws_hlr_exceptions (
+                    id INT(11) NOT NULL auto_increment,
+                    branchcode VARCHAR(10) NOT NULL default '',
+                    on_date DATE NOT NULL,
+                    opens TIME NULL,
+                    closes TIME NULL,
+                    PRIMARY KEY (id),
+                    KEY `branchcode` (`branchcode`)
+                ) ENGINE = INNODB;
+            }
+        );
+    }
 
     return 1;
 }
