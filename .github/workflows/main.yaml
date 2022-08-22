@@ -21,15 +21,19 @@ jobs:
     - name: Is a tag?
       run: |
         echo "${{ startsWith(github.ref, 'refs/tags/v') }}"
+
     - name: GitHub Ref 1
       run: |
         echo "${GITHUB_REF##*/}"
+
     - name: GitHub Ref 2
       run: |
         echo "${{ github.event.ref }}"
+
     - name: GitHub Ref 3
       run: |
         echo "${{ github.ref }}"
+
     - name: Dump env
       run: env | sort
 
@@ -39,6 +43,8 @@ jobs:
       run: echo "$GITHUB_CONTEXT"
 
     - uses: actions/checkout@v1
+
+    - uses: gautamkrishnar/keepalive-workflow@v1 # Keeps GitHub from pausing cron'ed actions
 
     - name: Get Koha Version Branch Name
       id: koha-version
@@ -75,6 +81,7 @@ jobs:
         echo "ROOT DIR: $ROOT_DIR"
         echo "SYNC_REPO: $SYNC_REPO"
         ls -alh $SYNC_REPO
+
     - name: Set up koha-testing-docker
       run: |
         sudo sysctl -w vm.max_map_count=262144
@@ -119,6 +126,7 @@ jobs:
         docker image  prune -f
         rm docker-compose.yml
         rm -rf env .env
+
   release:
     name: Build & Release
     runs-on: ubuntu-latest
@@ -136,11 +144,13 @@ jobs:
         GITHUB_REPO="${parts[1]}"
         echo ::set-output name=github_repo::$GITHUB_REPO
         echo "GITHUB REPO: $GITHUB_REPO"
+
         TAG_VERSION="${GITHUB_REF##*/}"
         echo "TAG VERSION: $TAG_VERSION"
         TAG_VERSION="${TAG_VERSION:1}"
         echo "TAG VERSION 2: $TAG_VERSION"
         echo ::set-output name=tag_version::$TAG_VERSION
+
     - name: Get Koha Version Branch Name
       id: koha-version-oldstable
       uses: "bywatersolutions/github-action-koha-get-version-by-label@master"
@@ -150,6 +160,7 @@ jobs:
     - name: Print minimum version
       run: |
         echo "Current oldstable version: ${{ steps.koha-version-oldstable.outputs.version-major-minor }}"
+
     - name: Dump myvars outputs
       env:
         GITHUB_CONTEXT: ${{ toJson(steps.myvars.outputs) }}
@@ -168,6 +179,7 @@ jobs:
       run: |
         echo "FILENAME: ${{ steps.kpz.outputs.filename }}"
         ls -alh
+
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
