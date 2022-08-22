@@ -11,8 +11,9 @@ use base qw(Koha::Plugins::Base);
 use C4::Context;
 use C4::Auth;
 use C4::Installer qw(TableExists);
+use C4::Circulation qw(GetLoanLength);
 
-use Koha::DateUtils;
+use Koha::DateUtils qw(dt_from_string);
 use Koha::Libraries;
 use Koha::Calendar;
 
