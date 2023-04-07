@@ -9,6 +9,8 @@ use Pod::Usage;
 use C4::Context;
 use C4::Letters;
 
+use Koha::DateUtils qw( dt_from_string );
+
 my @branchcodes;
 my @categories;
 my $delay;
@@ -42,11 +44,11 @@ pod2usage(1) unless ( $delay && $interval && $notice );
 
 =head1 NAME
 
-overdue_notices_hourly.pl - Send notices for hourly loans taht are overdue
+overdue_notices_hourly.pl - Send notices for hourly loans that are overdue
 
 =head1 SYNOPSIS
 
-overdue_notices_hourly.pl -d=<delay> -i=<interval> -n=<notice> [ -l=<library> -c=<categorycode> -r=<restricte> ]
+overdue_notices_hourly.pl -d=<delay> -i=<interval> -n=<notice> [ -l=<library> -c=<categorycode> -r=<restrict> ]
 
  Options:
    --help    brief help message
@@ -57,6 +59,8 @@ overdue_notices_hourly.pl -d=<delay> -i=<interval> -n=<notice> [ -l=<library> -c
    -d        <delay>     only select hourly loans at least this many minutes overdue
    -i        <interval>  starting from the delay, this is the maximum minutes overdue
                          for which to select overdue checkouts.
+   -n        <notice>    which notice/letter to use for sending
+   -r        <restrict>  if passed, patrons will be debarred
    --confirm Enqueue notices, otherwise display only
 
 =head1 OPTIONS
@@ -82,6 +86,14 @@ Patron category code. Only run overdue notices for patrons of this category type
 =item B<-l>
 
 Checkout library. Limit overdue notices to overdue hourly checkouts from this library. Repeatable.
+
+=item B<-n>
+
+Notice. Choose which notice to use for generating mesages. Required.
+
+=item B<-r>
+
+Restrict. If passed, patrons will be debarred with an Overdue restriction.
 
 =item B<-d>
 
