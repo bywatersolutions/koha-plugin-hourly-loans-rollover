@@ -218,7 +218,7 @@ sub configure {
     else {
         my $vars = $cgi->Vars;
 
-        my @libraries = Koha::Libraries->search();
+        my @libraries = Koha::Libraries->search()->as_list;
         my @branchcodes = map { $_->id } @libraries;
         unshift( @branchcodes, 'ALL_LIBS' );
 
