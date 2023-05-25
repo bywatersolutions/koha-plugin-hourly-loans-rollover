@@ -37,3 +37,7 @@ When the plugin looks for the opening or closing hours for a day, it looks for t
 Once the hours of operation for the libraries have been set, running the tool will produce a list of current checkouts that are due after hours and what the new due date and time should be. Overdue items are not included in this list.
 
 If the new due dates and times look good, they checkouts can be updated by clicking the "Change due dates and times" button and confirming the change.
+
+## Cronjob
+
+To automate the rollover, set up the script `Koha/Plugin/Com/ByWaterSolutions/HourlyLoansRollover/cli.pl` to run periodically, preferably sometime between every minute and every 5 minutes.
