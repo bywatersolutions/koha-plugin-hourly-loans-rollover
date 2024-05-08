@@ -9,10 +9,6 @@
 [% INCLUDE 'calendar.inc' %]
 <script type="text/javascript">
 //<![CDATA[
-    $(document).ready(function() {
-        $('#library-tabs').tabs();
-        $('.tabs').tabs();
-    });
 
     function add_exception( key ) {
         let exception_date = $(`#exception-${ key }-date`).val();
@@ -62,140 +58,144 @@
                     <input type="hidden" name="method" value="[% METHOD %]"/>
 
                     <div id="library-tabs" class="toptabs numbered">
-                        <ul>
-                            <li><a href="#tab-ALL_LIBS">All libraries</a></li>
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li role="presentation" class="active">
+                                <a href="#tab-ALL_LIBS" aria-controls="tab-ALL_LIBS" role="tab" data-toggle="tab">All libraries</a>
+                            </li>
 
                             [% FOREACH l IN libraries %]
-                                <li><a href="#tab-[% l.branchcode %]">[% l.branchname %]</a></li>
+                                <li role="presentation">
+                                    <a href="#tab-[% l.branchcode %]" aria-controls="tab-[% l.branchcode %]" role="tab" data-toggle="tab">[% l.branchname %]</a>
+                                </li>
                             [% END %]
                         </ul>
+                        <div class="tab-content">
+                            <div id="tab-ALL_LIBS" class="tab-pane active" role="tabpanel">
+                                <h4>Hours of operation - All libraries<h4>
 
-                        <div id="tab-ALL_LIBS">
-                            <h4>Hours of operation<h4>
-
-                            <table>
-                                <tr>
-                                    <th>&nbsp;</th>
-                                    <th>Opening time</th>
-                                    <th>Closing time</th>
-                                </tr>
-
-                                [% FOREACH d IN dow %]
-                                <tr>
-                                    <th>[% d %]</td>
-                                    <td>
-                                        [% SET key = "HoO-ALL_LIBS-" _ d _ "-opening-hour" %]
-                                        <select name="HoO-ALL_LIBS-[% d %]-opening-hour">
-                                            <option value=""></option>
-                                            [% FOREACH h IN [ 0 .. 23 ] %]
-                                                <option value="[% pad_time(h) %]" [% IF pad_time(h) == $key %]selected="selected"[% END %]>[% pad_time(h) %]</option>
-                                            [% END %]
-                                        </select>
-                                        :
-                                        [% SET key = "HoO-ALL_LIBS-" _ d _ "-opening-min" %]
-                                        <select name="HoO-ALL_LIBS-[% d %]-opening-min">
-                                            <option value=""></option>
-                                            [% FOREACH m IN [ 0 .. 59 ] %]
-                                                <option value="[% pad_time(m) %]" [% IF pad_time(m) == $key %]selected="selected"[% END %]>[% pad_time(m) %]</option>
-                                            [% END %]
-                                        </select>
-                                    </td>
-
-                                    <td>
-                                        [% SET key = "HoO-ALL_LIBS-" _ d _ "-closing-hour" %]
-                                        <select name="HoO-ALL_LIBS-[% d %]-closing-hour">
-                                            <option value=""></option>
-                                            [% FOREACH h IN [ 0 .. 23 ] %]
-                                                <option value="[% pad_time(h) %]" [% IF pad_time(h) == $key %]selected="selected"[% END %]>[% pad_time(h) %]</option>
-                                            [% END %]
-                                        </select>
-                                        :
-                                        [% SET key = "HoO-ALL_LIBS-" _ d _ "-closing-min" %]
-                                        <select name="HoO-ALL_LIBS-[% d %]-closing-min">
-                                            <option value=""></option>
-                                            [% FOREACH m IN [ 0 .. 59 ] %]
-                                                <option value="[% pad_time(m) %]" [% IF pad_time(m) == $key %]selected="selected"[% END %]>[% pad_time(m) %]</option>
-                                            [% END %]
-                                        </select>
-                                    </td>
-                                <tr>
-                                [% END %]
-                            </table>
-
-                            <p/>
-
-                            <h4>Exceptions</h4>
-                            [% SET key = 'ALL_LIBS' %]
-                            <table id="exceptions-table-[% key %]">
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Opening time</th>
-                                    <th>Closing time</th>
-                                    <th>&nbsp;</th>
-                                </tr>
-
-                                [% FOREACH e IN exceptions.$key.pairs %]
+                                <table>
                                     <tr>
-                                        <input type="hidden" name="exception_date" value="[% e.key %]" />
-                                        <input type="hidden" name="exception_branchcode" value="ALL_LIBS" />
-                                        <input type="hidden" name="exception_opens_hour" value="[% e.value.opens_hour %]" />
-                                        <input type="hidden" name="exception_opens_min" value="[% e.value.opens_min %]" />
-                                        <input type="hidden" name="exception_closes_hour" value="[% e.value.closes_hour %]" />
-                                        <input type="hidden" name="exception_closes_min" value="[% e.value.closes_min %]" />
-
-                                        <td>[% e.key | $KohaDates %]</td>
-                                        <td>[% e.value.opens_hour %]:[% e.value.opens_min %]</td>
-                                        <td>[% e.value.closes_hour %]:[% e.value.closes_min %]</td>
-                                        <td><button type="button" onclick="$(this).parent().parent().remove();">Delete</button></td>
+                                        <th>&nbsp;</th>
+                                        <th>Opening time</th>
+                                        <th>Closing time</th>
                                     </tr>
-                                [% END %]
 
-                                <tr>
-                                    <td>
-                                        <input type="text" size="10" id="exception-[% key %]-date" class="datepicker" />
-                                    </td>
-                                    <td>
-                                        <select id="exception-[% key %]-opening-hour">
-                                            <option value=""></option>
-                                            [% FOREACH h IN [ 0 .. 23 ] %]
-                                                <option value="[% pad_time(h) %]" [% IF pad_time(h) == $key %]selected="selected"[% END %]>[% pad_time(h) %]</option>
-                                            [% END %]
-                                        </select>
-                                        :
-                                        <select id="exception-[% key %]-opening-min">
-                                            <option value=""></option>
-                                            [% FOREACH m IN [ 0 .. 59 ] %]
-                                                <option value="[% pad_time(m) %]" [% IF pad_time(m) == $key %]selected="selected"[% END %]>[% pad_time(m) %]</option>
-                                            [% END %]
-                                        </select>
-                                    </td>
+                                    [% FOREACH d IN dow %]
+                                    <tr>
+                                        <th>[% d %]</td>
+                                        <td>
+                                            [% SET key = "HoO-ALL_LIBS-" _ d _ "-opening-hour" %]
+                                            <select name="HoO-ALL_LIBS-[% d %]-opening-hour">
+                                                <option value=""></option>
+                                                [% FOREACH h IN [ 0 .. 23 ] %]
+                                                    <option value="[% pad_time(h) %]" [% IF pad_time(h) == $key %]selected="selected"[% END %]>[% pad_time(h) %]</option>
+                                                [% END %]
+                                            </select>
+                                            :
+                                            [% SET key = "HoO-ALL_LIBS-" _ d _ "-opening-min" %]
+                                            <select name="HoO-ALL_LIBS-[% d %]-opening-min">
+                                                <option value=""></option>
+                                                [% FOREACH m IN [ 0 .. 59 ] %]
+                                                    <option value="[% pad_time(m) %]" [% IF pad_time(m) == $key %]selected="selected"[% END %]>[% pad_time(m) %]</option>
+                                                [% END %]
+                                            </select>
+                                        </td>
 
-                                    <td>
-                                        <select id="exception-[% key %]-closing-hour">
-                                            <option value=""></option>
-                                            [% FOREACH h IN [ 0 .. 23 ] %]
-                                                <option value="[% pad_time(h) %]" [% IF pad_time(h) == $key %]selected="selected"[% END %]>[% pad_time(h) %]</option>
-                                            [% END %]
-                                        </select>
-                                        :
-                                        <select id="exception-[% key %]-closing-min">
-                                            <option value=""></option>
-                                            [% FOREACH m IN [ 0 .. 59 ] %]
-                                                <option value="[% pad_time(m) %]" [% IF pad_time(m) == $key %]selected="selected"[% END %]>[% pad_time(m) %]</option>
-                                            [% END %]
-                                        </select>
-                                    </td>
+                                        <td>
+                                            [% SET key = "HoO-ALL_LIBS-" _ d _ "-closing-hour" %]
+                                            <select name="HoO-ALL_LIBS-[% d %]-closing-hour">
+                                                <option value=""></option>
+                                                [% FOREACH h IN [ 0 .. 23 ] %]
+                                                    <option value="[% pad_time(h) %]" [% IF pad_time(h) == $key %]selected="selected"[% END %]>[% pad_time(h) %]</option>
+                                                [% END %]
+                                            </select>
+                                            :
+                                            [% SET key = "HoO-ALL_LIBS-" _ d _ "-closing-min" %]
+                                            <select name="HoO-ALL_LIBS-[% d %]-closing-min">
+                                                <option value=""></option>
+                                                [% FOREACH m IN [ 0 .. 59 ] %]
+                                                    <option value="[% pad_time(m) %]" [% IF pad_time(m) == $key %]selected="selected"[% END %]>[% pad_time(m) %]</option>
+                                                [% END %]
+                                            </select>
+                                        </td>
+                                    <tr>
+                                    [% END %]
+                                </table>
 
-                                    <td>
-                                        <button type="button" onclick="add_exception('[% key %]')">Add exception</button>
-                                    </td>
-                                <tr>
-                            </table>
-                        </div>
+                                <p/>
+
+                                <h4>Exceptions</h4>
+                                [% SET key = 'ALL_LIBS' %]
+                                <table id="exceptions-table-[% key %]">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Opening time</th>
+                                        <th>Closing time</th>
+                                        <th>&nbsp;</th>
+                                    </tr>
+
+                                    [% FOREACH e IN exceptions.$key.pairs %]
+                                        <tr>
+                                            <input type="hidden" name="exception_date" value="[% e.key %]" />
+                                            <input type="hidden" name="exception_branchcode" value="ALL_LIBS" />
+                                            <input type="hidden" name="exception_opens_hour" value="[% e.value.opens_hour %]" />
+                                            <input type="hidden" name="exception_opens_min" value="[% e.value.opens_min %]" />
+                                            <input type="hidden" name="exception_closes_hour" value="[% e.value.closes_hour %]" />
+                                            <input type="hidden" name="exception_closes_min" value="[% e.value.closes_min %]" />
+
+                                            <td>[% e.key | $KohaDates %]</td>
+                                            <td>[% e.value.opens_hour %]:[% e.value.opens_min %]</td>
+                                            <td>[% e.value.closes_hour %]:[% e.value.closes_min %]</td>
+                                            <td><button type="button" onclick="$(this).parent().parent().remove();">Delete</button></td>
+                                        </tr>
+                                    [% END %]
+
+                                    <tr>
+                                        <td>
+                                            <input type="text" size="10" id="exception-[% key %]-date" class="datepicker" />
+                                        </td>
+                                        <td>
+                                            <select id="exception-[% key %]-opening-hour">
+                                                <option value=""></option>
+                                                [% FOREACH h IN [ 0 .. 23 ] %]
+                                                    <option value="[% pad_time(h) %]" [% IF pad_time(h) == $key %]selected="selected"[% END %]>[% pad_time(h) %]</option>
+                                                [% END %]
+                                            </select>
+                                            :
+                                            <select id="exception-[% key %]-opening-min">
+                                                <option value=""></option>
+                                                [% FOREACH m IN [ 0 .. 59 ] %]
+                                                    <option value="[% pad_time(m) %]" [% IF pad_time(m) == $key %]selected="selected"[% END %]>[% pad_time(m) %]</option>
+                                                [% END %]
+                                            </select>
+                                        </td>
+
+                                        <td>
+                                            <select id="exception-[% key %]-closing-hour">
+                                                <option value=""></option>
+                                                [% FOREACH h IN [ 0 .. 23 ] %]
+                                                    <option value="[% pad_time(h) %]" [% IF pad_time(h) == $key %]selected="selected"[% END %]>[% pad_time(h) %]</option>
+                                                [% END %]
+                                            </select>
+                                            :
+                                            <select id="exception-[% key %]-closing-min">
+                                                <option value=""></option>
+                                                [% FOREACH m IN [ 0 .. 59 ] %]
+                                                    <option value="[% pad_time(m) %]" [% IF pad_time(m) == $key %]selected="selected"[% END %]>[% pad_time(m) %]</option>
+                                                [% END %]
+                                            </select>
+                                        </td>
+
+                                        <td>
+                                            <button type="button" onclick="add_exception('[% key %]')">Add exception</button>
+                                        </td>
+                                    <tr>
+                                </table>
+                            </div>
 
                         [% FOREACH l IN libraries %]
-                            <div id="tab-[% l.branchcode %]">
-                                <h4>Hours of operation<h4>
+                            <div id="tab-[% l.branchcode %]" class="tab-pane" role="tabpanel">
+                                <h4>Hours of operation - [% l.branchname | html %]<h4>
 
                                 <table>
                                     <tr>
@@ -315,6 +315,7 @@
                                 </table>
                             </div>
                         [% END %]
+                        </div>
                     </div>
 
                     <fieldset class="rows">
